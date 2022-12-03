@@ -10,17 +10,17 @@
 - Regardless of the hierarchy, the parent isolate cannot access the memory of the child isolate.
 - The child isolates will terminate if the parent does.
 
-### ReceivePort
-> ReceivePort is used by the isolate to receive data. 
+> ### ReceivePort 
+  ReceivePort is used by the isolate to receive data.  
   Another instance of this can also be used by the parent isolate to send data to the spawned isolate
 
 ### ControlPort
-> ControlPort is a special port that allows its owner to have capabilities such as pausing or terminating the isolate
+ControlPort is a special port that allows its owner to have capabilities such as pausing or terminating the isolate
 
 ### Capability
-> Capability is object instance used for isolate authentication, 
-  i.e., whenever we wish to send control port commands like pause or terminate, 
-  we also need the corresponding instances of Capability that were used when the isolate was created, without which the command would fail
+Capability is object instance used for isolate authentication, 
+i.e., whenever we wish to send control port commands like pause or terminate, 
+we also need the corresponding instances of Capability that were used when the isolate was created, without which the command would fail
 
 
 # Compute
