@@ -64,8 +64,8 @@ This is suitable for tasks that are infrequent or one-offs, since we cannot reus
         }
 
 > The spawn function takes in two parameters:
-     * A callback that is invoked within the new isolate (in our case, deserializePerson)
-     * The parameter that deserializePerson takes
+> * A callback that is invoked within the new isolate (in our case, deserializePerson)
+> * The parameter that deserializePerson takes
 
 - One of the first things we should do is create an instance of ReceivePort. 
   This allows us to listen to the response of the isolate.
