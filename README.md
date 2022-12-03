@@ -1,8 +1,7 @@
 # Multithreading
 
-### Expensive operations within a flow either need to be asynchronous or should run on background threads because overloading the main thread, which handles meta tasks like the event loop, will result in some janky behavior.
-
-> In Flutter, the entire UI and most of our code run on the root isolate.
+#### Expensive operations within a flow either need to be asynchronous or should run on background threads because overloading the main thread, which handles meta tasks like the event loop, will result in some janky behavior.
+#### In Flutter, the entire UI and most of our code run on the root isolate.
 
 - An isolate has its own memory space
 - It cannot share mutable values with other isolates
