@@ -21,24 +21,24 @@ class _ComputeState extends State<Compute> {
   Future<void> captureWidget() async {
     isLoading = true;
     setState(() {});
-    // widgetImage = await compute(capture, 10.0);
-    // widgetImage = await capture(10.0);
-    if (widgetImage == null) {
-      widgetImage = await capture(10.0);
-    } else {
-      widgetImage = null;
-    }
-    setState(() {});
-  }
 
-  Future update() async {
-    captureWidget().then((value) {
+    update().then((value) {
       Future.delayed(const Duration(milliseconds: 900), () {
         setState(() {
           isLoading = false;
         });
       });
     });
+  }
+
+  Future update() async {
+    if (widgetImage == null) {
+      // widgetImage = await compute(capture, 10.0);
+      widgetImage = await capture(10.0);
+    } else {
+      widgetImage = null;
+    }
+    setState(() {});
   }
 
   void _captureWidget() async {
@@ -106,8 +106,7 @@ class _ComputeState extends State<Compute> {
                   const SizedBox(height: 50),
                   ElevatedButton(
                     onPressed: () {
-                      // captureWidget();
-                      update();
+                      captureWidget();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEAF6EF),
