@@ -68,3 +68,5 @@ This is suitable for tasks that are infrequent or one-offs, since we cannot reus
 
 - One of the first things we should do is create an instance of ReceivePort. 
   This allows us to listen to the response of the isolate.
+
+- We combine both the port and the serialized data into a list and send it across. Next, we use sendPort.send to return the value to the main isolate and await the same with port.first. Finally, we kill the isolate to complete the cleanup
