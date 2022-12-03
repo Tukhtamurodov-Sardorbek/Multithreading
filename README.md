@@ -10,9 +10,8 @@
 - Regardless of the hierarchy, the parent isolate cannot access the memory of the child isolate.
 - The child isolates will terminate if the parent does.
 
-> ### ReceivePort 
-  ReceivePort is used by the isolate to receive data.  
-  Another instance of this can also be used by the parent isolate to send data to the spawned isolate
+### ReceivePort 
+ReceivePort is used by the isolate to receive data. Another instance of this can also be used by the parent isolate to send data to the spawned isolate
 
 ### ControlPort
 ControlPort is a special port that allows its owner to have capabilities such as pausing or terminating the isolate
@@ -63,9 +62,9 @@ This is suitable for tasks that are infrequent or one-offs, since we cannot reus
           sendPort.send(Person(dataMap["name"]));
         }
 
-> The spawn function takes in two parameters:
-> - A callback that is invoked within the new isolate (in our case, deserializePerson)
-> - The parameter that deserializePerson takes
+- The spawn function takes in two parameters:
+  - A callback that is invoked within the new isolate (in our case, deserializePerson)
+  - The parameter that deserializePerson takes
 
-- One of the first things we should do is create an instance of ReceivePort. 
-  This allows us to listen to the response of the isolate.
+  - One of the first things we should do is create an instance of ReceivePort. 
+    This allows us to listen to the response of the isolate.
