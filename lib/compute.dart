@@ -1,9 +1,8 @@
-import 'dart:typed_data';
+import 'dart:isolate';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:multithreading/app.dart';
 import 'components/app_bar.dart';
 import 'package:multithreading/components/receipt.dart';
 
@@ -18,6 +17,16 @@ class _ComputeState extends State<Compute> {
   Uint8List? widgetImage;
   bool isLoading = false;
 
+  Future update() async {
+    if (widgetImage == null) {
+      // widgetImage = await compute(capture, 10.0);
+      widgetImage = await capture(10.0);
+    } else {
+      widgetImage = null;
+    }
+    setState(() {});
+  }
+
   Future<void> captureWidget() async {
     isLoading = true;
     setState(() {});
@@ -29,16 +38,6 @@ class _ComputeState extends State<Compute> {
         });
       });
     });
-  }
-
-  Future update() async {
-    if (widgetImage == null) {
-      // widgetImage = await compute(capture, 10.0);
-      widgetImage = await capture(10.0);
-    } else {
-      widgetImage = null;
-    }
-    setState(() {});
   }
 
   void _captureWidget() async {
@@ -105,9 +104,7 @@ class _ComputeState extends State<Compute> {
                   ),
                   const SizedBox(height: 50),
                   ElevatedButton(
-                    onPressed: () {
-                      captureWidget();
-                    },
+                    onPressed: captureWidget,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEAF6EF),
                       fixedSize: const Size(double.infinity, 50),
