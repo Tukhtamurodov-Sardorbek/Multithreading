@@ -1,0 +1,249 @@
+import 'dart:isolate';
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class InfiniteProcessPageStarter extends StatelessWidget {
+  const InfiniteProcessPageStarter({super.key});
+
+  @override
+  Widget build(context) {
+    return ChangeNotifierProvider(
+      create: (context) => InfiniteProcessIsolateController(),
+      child: const InfiniteProcessPage(),
+    );
+  }
+}
+
+class InfiniteProcessPage extends StatelessWidget {
+  const InfiniteProcessPage({super.key});
+
+  @override
+  Widget build(context) {
+    final controller = Provider.of<InfiniteProcessIsolateController>(context);
+
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Summation Results',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          const Expanded(
+            child: RunningList(),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ButtonBar(
+                alignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(elevation: 8.0),
+                    onPressed: () => controller.start(),
+                    child: const Text('Start'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(elevation: 8.0),
+                    onPressed: () => controller.terminate(),
+                    child: const Text('Terminate'),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Switch(
+                    value: !controller.paused,
+                    onChanged: (_) => controller.pausedSwitch(),
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.black,
+                    inactiveTrackColor: Colors.deepOrangeAccent,
+                    inactiveThumbColor: Colors.black,
+                  ),
+                  const Text('Pause/Resume'),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (int i = 1; i <= 3; i++) ...[
+                    Radio<int>(
+                      value: i,
+                      groupValue: controller.currentMultiplier,
+                      onChanged: (val) => controller.setMultiplier(val!),
+                    ),
+                    Text('x$i')
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class InfiniteProcessIsolateController extends ChangeNotifier {
+  Isolate? newIsolate;
+  late ReceivePort receivePort;
+  late SendPort newIceSP;
+  Capability? capability;
+
+  int _currentMultiplier = 1;
+  final List<int> _currentResults = [];
+  bool _created = false;
+  bool _paused = false;
+
+  int get currentMultiplier => _currentMultiplier;
+
+  bool get paused => _paused;
+
+  bool get created => _created;
+
+  List<int> get currentResults => _currentResults;
+
+  Future<void> createIsolate() async {
+    receivePort = ReceivePort();
+    newIsolate = await Isolate.spawn(_secondIsolateEntryPoint, receivePort.sendPort);
+  }
+
+  void listen() {
+    receivePort.listen((dynamic message) {
+      if (message is SendPort) {
+        newIceSP = message;
+        newIceSP.send(_currentMultiplier);
+      } else if (message is int) {
+        setCurrentResults(message);
+      }
+    });
+  }
+
+  Future<void> start() async {
+    if (_created == false && _paused == false) {
+      await createIsolate();
+      listen();
+      _created = true;
+      notifyListeners();
+    }
+  }
+
+  void terminate() {
+    newIsolate?.kill();
+    _created = false;
+    _currentResults.clear();
+    notifyListeners();
+  }
+
+  void pausedSwitch() {
+    if (_paused && capability != null) {
+      newIsolate?.resume(capability!);
+    } else {
+      capability = newIsolate?.pause();
+    }
+
+    _paused = !_paused;
+    notifyListeners();
+  }
+
+  void setMultiplier(int newMultiplier) {
+    _currentMultiplier = newMultiplier;
+    newIceSP.send(_currentMultiplier);
+    notifyListeners();
+  }
+
+  void setCurrentResults(int newNum) {
+    _currentResults.insert(0, newNum);
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    newIsolate?.kill(priority: Isolate.immediate);
+    newIsolate = null;
+    super.dispose();
+  }
+}
+
+class RunningList extends StatelessWidget {
+  const RunningList({super.key});
+
+  @override
+  Widget build(context) {
+    final controller = Provider.of<InfiniteProcessIsolateController>(context);
+
+    var sums = controller.currentResults;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+      ),
+      child: ListView.builder(
+        itemCount: sums.length,
+        itemBuilder: (context, index) {
+          return Column(
+            children: [
+              Card(
+                color: (controller.created && !controller.paused)
+                    ? Colors.lightGreenAccent
+                    : Colors.deepOrangeAccent,
+                child: ListTile(
+                  leading: Text('${sums.length - index}.'),
+                  title: Text('${sums[index]}.'),
+                ),
+              ),
+              const Divider(
+                color: Colors.blue,
+                height: 3,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+Future<void> _secondIsolateEntryPoint(SendPort callerSP) async {
+  var multiplyValue = 1;
+
+  var newIceRP = ReceivePort();
+  callerSP.send(newIceRP.sendPort);
+
+  newIceRP.listen((dynamic message) {
+    if (message is int) {
+      multiplyValue = message;
+    }
+  });
+
+  // This runs until the isolate is terminated.
+  while (true) {
+    var sum = 0;
+
+    for (var i = 0; i < 10000; i++) {
+      sum += await doSomeWork();
+    }
+
+    callerSP.send(sum * multiplyValue);
+  }
+}
+
+Future<int> doSomeWork() {
+  var rng = Random();
+
+  return Future(() {
+    var sum = 0;
+
+    for (var i = 0; i < 1000; i++) {
+      sum += rng.nextInt(100);
+    }
+
+    return sum;
+  });
+}
